@@ -1,0 +1,55 @@
+@echo off
+rem set the value
+echo.------------------------------------------
+echo. 1.宿舍ip自动设置
+echo. 2.公司ip设置
+echo. 3.其他按键退出
+echo create by 
+echo.------------------------------------------
+set /p choice=
+if "%choice%"=="1" goto DHCP
+if "%choice%"=="2" goto WLAN
+goto QUIT
+:DHCP
+set Nic=无线网络连接
+echo -----------------------------------------
+echo please wait a sec to set the IP address
+netsh interface ipv4 set address name=%Nic% source = dhcp >nul
+echo 动态ip设置完成
+netsh interface ipv4 set dns name=%Nic% source = dhcp >nul
+echo 动态dns设置完成
+echo -----------------------------------------
+goto QUIT
+rem pause >nul
+:WLAN
+rem 动态分配地址
+netsh interface ipv4 set address name=%Nic% source = dhcp >nul
+netsh interface ipv4 set dns name=%Nic% source = dhcp >nul
+rem //获取dhcp分配给予的ip地址
+for /f "tokens=2 delims=:(" %%i in ('ipconfig /all^|find "10.205.55"') do set currentip=%%i
+echo 当前你的IP地址是%currentip%
+rem //设置已分配好的IP 网关子网掩码dns
+set Nic=无线网络连接
+set Addr=%currentip%
+set Mask= 255.255.252.0
+set dns1= 10.205.53.49
+set dns2=10.205.3.24
+set Gate=10.205.52.18
+echo ----------------------------------------
+echo please wait a sec to set the IP address
+echo. IP地址=%Addr%
+echo. 子网掩码=%Mask% 
+netsh interface ipv4 set address name = %Nic% source = static addr =%Addr% mask = %Mask% gateway = %Gate% gwmetric=0 >nul
+echo. 网关= %Gate%
+rem netsh interface  set address name = %Nic% gateway = %Gate% gwmetric=0 >nul
+echo. 首选DNS = %dns1%
+netsh interface ip set dns name = %Nic% source = static addr = %dns1%  >nul
+echo. 备用DNS = %dns2%
+netsh interface ip add dns name = %Nic% addr= %dns2% >nul
+echo IP设置完成
+echo -------------------------------------------
+rem pause >nul
+goto QUIT
+:QUIT
+exit
+
